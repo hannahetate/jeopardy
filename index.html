@@ -1,0 +1,423 @@
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet">
+    <style>
+        body {
+            text-align: center;
+            font-family: "Roboto Condensed";
+            font-weight: 700;
+            background-color: black;
+        }
+
+        #board {
+            border: 10px solid #3868A6;
+            border-collapse: collapse;
+            display: flex;
+        }
+
+        #board .column {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #board .category {
+            text-align: center;
+            height: calc(100vw/8);
+            text-transform: uppercase;
+            font-size: 25px;
+            border: 10px solid #3868A6;
+            background-color: #696218;
+            color: #172A42;
+            padding: 10px;
+        }
+
+        #board .question {
+            height: calc(100vw/8);
+            text-align: center;
+            font-size: 90px;
+            letter-spacing: -5px;
+            border: 10px solid #3868A6;
+            color: #CDBC8D;
+            background-color: #172A42;
+
+        }
+
+        .lit {
+            background-color: #E8D835;
+
+        }
+
+        #board .question.answered {
+            color: #CDBC8D10;
+        }
+        
+        #board.hidden, .hidden {
+             display: none;
+
+         }
+        
+
+         #setup td, #setup tr {
+             font-size: 14px;
+             letter-spacing: 0;
+         }
+
+         #setup {
+             background-color: white;
+         }
+
+
+        #question {
+            color: white;
+            height: 100vh;
+            font-size: 2em;
+            text-transform: uppercase;
+            padding: 10%;
+            box-sizing: border-box;
+            letter-spacing: 0.1em;
+            background-color:#3868A6 ;
+        }
+
+        #question p {
+            font-size: 1.5em;
+            
+        }
+
+        #players {
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            height: 90vh;
+            width: 100vw;
+            font-size: 2em;
+            text-transform: uppercase;
+            padding: 10%;
+            box-sizing: border-box;
+        }
+        
+        #stage .player {
+            background-image: url(monkey.png);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
+            width: 400px;
+        }
+
+        #stage .player .score {
+            font-size: 20px;
+            margin-top: 200px;
+        }
+
+        #stage .player .name {
+            font-family: "Homemade Apple";
+            text-transform: none;
+            line-height: 1em;
+            width: 100px;
+            margin: auto;
+            margin-top: 20px;
+            color: black;
+            font-size: 20px;
+        }
+
+    </style>
+
+
+    <script>
+        var players = [
+            {
+            name: "turd furgason",
+            score: 1200 
+            },
+            {
+            name: "sean connery",
+            score: 1000
+            },
+            {
+            name: "french",
+            score: 200 
+            },
+            {
+            name: "hannah",
+            score: 33200 
+            }
+        ]
+        function giveMoney (playerIndex) {
+            var amount=+document.querySelector("#question .category").getAttribute("data-value");
+            players[playerIndex].score+=amount;
+            updateStage();
+
+            hide("setup");
+            show("stage");
+            hide("board");
+            hide("question");
+
+        }
+        function setupWhoKnewIt() {
+            html='';
+            players.forEach((p, i) => {
+                html+=`<button onclick="giveMoney(${i}, 400)">
+                        ${p.name} 
+                    </button>`;
+            })
+            var $stage=document.getElementById('whoknewit');
+            $stage.innerHTML=html;
+
+        }
+
+        function updateStage () {
+            html='';
+            players.forEach((p) => {
+                html+=`<div class="player">
+                    <div class="score">
+                        ${p.score}
+                    </div>
+                    <div class="name"> 
+                        ${p.name} 
+                    </div>
+                </div>`;
+            })
+            var $stage=document.getElementById('players');
+            $stage.innerHTML=html;
+        }
+        
+        window.onload = function () {
+            updateStage();
+            setupWhoKnewIt();
+            initGame();
+        }
+
+    
+    var board={};
+    var clues={};
+
+    function startGame() {
+        initBoard();
+        updateBoard();
+        showStage();
+    }
+
+    function show(id) {
+        document.getElementById(id).classList.remove("hidden");
+    }
+
+
+    function hide(id) {
+        document.getElementById(id).classList.add("hidden");
+    }
+
+    function showStage() {
+        hide("setup");
+        show("stage");
+        hide("board");
+        hide("question");
+
+    }
+
+    function showBoard() {
+        hide("setup");
+        hide("stage");
+        show("board");
+        hide("question");
+
+    }
+
+
+    function showQuestion(el) {
+        $category=document.querySelector('#question .category');
+        $question=document.querySelector('#question .question');
+
+        var value=el.innerText;
+        var category=el.getAttribute("data-category");
+        var question=decodeURIComponent(el.getAttribute("data-question"));
+        var answer=el.getAttribute("data-answer");
+
+        $category.innerHTML=category;
+        $category.setAttribute("data-value",value);
+        $question.innerHTML=question;
+
+        el.classList.add("answered");
+
+        hide("setup");
+        hide("stage");
+        hide("board");
+        show("question");
+
+    }
+
+    function updateBoard() {
+        html='';
+        for (category in board) {
+            html+=`<div class="column"><div class="category">${category}</div>`;
+            var currentCategory=board[category];
+            for (value in currentCategory) {
+                var question=currentCategory[value];
+                html+=`<div onclick="showQuestion(this)"" class="question" data-category="${category}" data-question="${encodeURIComponent(question.question)}" data-answer="${question.answer}">${value}</div>`;
+            }
+            html+=`</div>`;
+        }
+        var $board=document.getElementById('board');
+        $board.innerHTML=html;
+    }
+   
+    function displayClues() {
+        var html="";
+        for (var cat in clues) {
+            html+=`<h3>Clues for: ${cat}</h3>`;
+            var categ=clues[cat];
+            html+="<table><tr><th>Question</th><th>Answer</th><th>Value</th></tr>";
+            for (var val in categ) {
+                var cl=categ[val];
+                cl.forEach((clue) => {
+                    html+=`<tr><td>${clue.question}</td><td>${clue.answer}</td><td>${val}</td></tr>`;
+                })
+            }
+            html+="</table>";
+        }
+        document.getElementById("clues").innerHTML=html;
+    }
+
+    function clipToClues(txt) {
+        var lines=txt.split('\n');
+        var currentCatName='';
+        var currentCat;
+        lines.forEach((l) => {
+            if (l.toLowerCase().indexOf('clues for:')==0) {
+                currentCatName=l.split(':')[1].trim();
+                if (!clues[currentCatName]) {
+                    clues[currentCatName]={};
+                }
+                currentCat=clues[currentCatName];
+            } else {
+                if (currentCat) {
+                    if (l.toLowerCase().indexOf("question")!=0) {
+                        var cols=l.split('\t');
+                        if (cols.length>2) {
+                            var question=cols[0];
+                            var answer=cols[1]
+                            var value=cols[2].trim();
+                            if (!currentCat[value]) {
+                                currentCat[value]=[];
+                            }
+                            var currentValue=currentCat[value];
+                            if (!currentValue.find((e) => question.toLowerCase() == e.question.toLowerCase() )) {
+                                currentValue.push({question: question, answer: answer});
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        if (!currentCat) {
+            alert ('no "clue for:" found in clip board');
+        }
+    }
+
+    function loadGame() {
+        var cluesstr=localStorage.getItem("clues");
+        if (cluesstr) {
+            clues=JSON.parse(cluesstr);
+        }
+
+        var playersstr=localStorage.getItem("players");
+        if (playersstr) {
+            players=JSON.parse(playersstr);
+        }
+
+        var boardstr=localStorage.getItem("board");
+        if (boardstr) {
+            board=JSON.parse(boardstr);
+        }
+    }
+
+    function storeGame() {
+        localStorage.setItem("clues", JSON.stringify(clues));
+        localStorage.setItem("players", JSON.stringify(players));
+        localStorage.setItem("board", JSON.stringify(board));
+    }
+
+    function addFromClipboard() {
+        navigator.clipboard.readText().then(clipText => {
+            clipToClues(clipText);
+            storeGame();
+            displayClues();
+        });
+    }
+
+    function clearClues() {
+        clues={};
+        storeGame();
+        displayClues();
+    }
+
+    function initGame() {
+        loadGame();
+        displayClues();
+
+        show("setup");
+        hide("stage");
+        hide("board");
+        hide("question");
+
+    }
+
+    function initBoard() {
+        board={};
+        for (var cat in clues) {
+            var c=clues[cat];
+            board[cat]={};
+            var counter=0;
+            for (var v in c) {
+                var cl=c[v];
+                var clue=cl[Math.floor(Math.random()*cl.length)];
+                board[cat][v]={question: clue.question, answer: clue.answer, played: false};
+                counter++;
+                if (counter == 5) break;
+            }
+        }
+    }
+
+        
+    </script>
+</head>
+<body>
+    <div id="setup">
+        <div id="clues">
+
+        </div> 
+        <button onclick="startGame()">
+            start game
+        </button>
+        <button onclick="addFromClipboard()">
+        add clues from clipboard.
+        </button>
+
+        <button onclick="clearClues()">
+            clear clues.
+        </button>
+
+    </div>
+    <div id="stage">
+        <div id="players">
+        </div>
+        <button onclick="showBoard()">go to board</button>
+    </div>
+    
+ <div id="board"> 
+</div>
+<div id="question">
+    <h1 class="category" data-value="">
+        Potent Potables
+    </h1>
+    <p class="question">
+        It's the liquor in a casino cocktail, & often in a martini.
+    </p>
+    <div id="whoknewit">
+        <button onclick="giveMoney(0)">turd</button>
+        <button onclick="giveMoney(1)">sean</button>
+        <button onclick="giveMoney(2)">french</button>        
+    </div>
+</div>
+</body>
+</html>  
